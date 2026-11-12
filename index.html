@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thin Cylinder Stress &amp; Dimension Calculator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Prism.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-blue-600 selection:text-white">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <i class="fa-solid fa-shapes text-white text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            Thin Cylinder Stress &amp; Dimension Calculator
+          </h1>
+          <p class="text-xs text-slate-400 font-mono">Built directly from code.md</p>
+        </div>
+      </div>
+      
+      <!-- Nav Tabs -->
+      <div class="flex items-center gap-1.5 bg-slate-800/90 p-1 rounded-xl border border-slate-700/60 text-xs font-semibold">
+        <button id="tab-dashboard" onclick="switchTab('dashboard')" class="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white shadow transition-all">
+          <i class="fa-solid fa-chart-line mr-1.5"></i> Interactive App
+        </button>
+        <button id="tab-python" onclick="switchTab('python')" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all">
+          <i class="fa-brands fa-python mr-1.5 text-yellow-400"></i> Run Python Script
+        </button>
+        <button id="tab-code" onclick="switchTab('code')" class="px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all">
+          <i class="fa-solid fa-code mr-1.5 text-cyan-400"></i> View code.md
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- ==================== VIEW 1: DASHBOARD ==================== -->
+    <div id="view-dashboard" class="space-y-6">
+
+      <!-- TOP SECTION: CONTROLS & CALCULATED VALUES -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- CONTROLS COLUMN (5 Cols) -->
+        <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-blue-400"></i> Geometric &amp; Loading Conditions
+            </h2>
+            <button onclick="resetDefaults()" class="text-xs text-slate-400 hover:text-blue-400 transition-colors flex items-center gap-1">
+              <i class="fa-solid fa-rotate-left"></i> Reset Defaults
+            </button>
+          </div>
+
+          <div class="space-y-3.5 text-xs">
+            <!-- 1. Internal Diameter -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center">
+                <label for="input-diameter" class="font-semibold text-slate-200">
+                  Internal Diameter (<span class="font-mono text-cyan-400">d</span>)
+                </label>
+                <span class="text-slate-500 font-mono text-[11px]">(e.g., 1000 mm)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="range" id="slider-diameter" min="100" max="4000" step="50" value="1000" class="flex-1 accent-cyan-400 cursor-pointer">
+                <div class="relative w-32">
+                  <input type="number" id="input-diameter" value="1000" step="10" min="1" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono text-xs text-white focus:outline-none focus:border-cyan-400">
+                  <span class="absolute left-2 top-2 text-[10px] text-slate-500 font-mono">mm</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Cylinder Length -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center">
+                <label for="input-length" class="font-semibold text-slate-200">
+                  Cylinder Length (<span class="font-mono text-blue-400">l</span>)
+                </label>
+                <span class="text-slate-500 font-mono text-[11px]">(e.g., 3000 mm)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="range" id="slider-length" min="500" max="10000" step="100" value="3000" class="flex-1 accent-blue-400 cursor-pointer">
+                <div class="relative w-32">
+                  <input type="number" id="input-length" value="3000" step="50" min="1" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono text-xs text-white focus:outline-none focus:border-blue-400">
+                  <span class="absolute left-2 top-2 text-[10px] text-slate-500 font-mono">mm</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Wall Thickness -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center">
+                <label for="input-thickness" class="font-semibold text-slate-200">
+                  Wall Thickness (<span class="font-mono text-emerald-400">t</span>)
+                </label>
+                <span class="text-slate-500 font-mono text-[11px]">(e.g., 10 mm)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="range" id="slider-thickness" min="1" max="100" step="0.5" value="10" class="flex-1 accent-emerald-400 cursor-pointer">
+                <div class="relative w-32">
+                  <input type="number" id="input-thickness" value="10" step="0.5" min="0.1" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono text-xs text-white focus:outline-none focus:border-emerald-400">
+                  <span class="absolute left-2 top-2 text-[10px] text-slate-500 font-mono">mm</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Internal Pressure -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center">
+                <label for="input-pressure" class="font-semibold text-slate-200">
+                  Internal Pressure (<span class="font-mono text-amber-400">p</span>)
+                </label>
+                <span class="text-slate-500 font-mono text-[11px]">(e.g., 0.5 N/mm²)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="range" id="slider-pressure" min="0.05" max="5.0" step="0.05" value="0.5" class="flex-1 accent-amber-400 cursor-pointer">
+                <div class="relative w-32">
+                  <input type="number" id="input-pressure" value="0.5" step="0.05" min="0.01" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono text-xs text-white focus:outline-none focus:border-amber-400">
+                  <span class="absolute left-2 top-2 text-[10px] text-slate-500 font-mono">N/mm²</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Border divider for Material properties -->
+            <div class="pt-2 border-t border-slate-800">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Material Properties</span>
+            </div>
+
+            <!-- 5. Young's Modulus -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center">
+                <label for="input-emodulus" class="font-semibold text-slate-200">
+                  Young's Modulus (<span class="font-mono text-purple-400">E</span>)
+                </label>
+                <span class="text-slate-500 font-mono text-[11px]">(e.g., 200000 for steel)</span>
+              </div>
+              <div class="relative">
+                <input type="number" id="input-emodulus" value="200000" step="5000" min="1" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-right font-mono text-xs text-white focus:outline-none focus:border-purple-400">
+                <span class="absolute left-3 top-2 text-[10px] text-slate-500 font-mono">N/mm² (MPa)</span>
+              </div>
+            </div>
+
+            <!-- 6. Poisson's ratio -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center">
+                <label for="input-poisson" class="font-semibold text-slate-200">
+                  Poisson's ratio (<span class="font-mono text-pink-400">&mu;</span>)
+                </label>
+                <span class="text-slate-500 font-mono text-[11px]">(e.g., 0.3)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="range" id="slider-poisson" min="0.1" max="0.5" step="0.01" value="0.3" class="flex-1 accent-pink-400 cursor-pointer">
+                <div class="relative w-32">
+                  <input type="number" id="input-poisson" value="0.3" step="0.01" min="0.0" max="0.5" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-right font-mono text-xs text-white focus:outline-none focus:border-pink-400">
+                  <span class="absolute left-2 top-2 text-[10px] text-slate-500 font-mono">&mu;</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Error Alert Banner -->
+          <div id="error-banner" class="hidden p-3 rounded-xl bg-red-950/70 border border-red-700 text-red-200 text-xs flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-red-400"></i>
+            <span id="error-text">Invalid input detected. Enter numerical values only.</span>
+          </div>
+
+        </div>
+
+        <!-- RESULTS COLUMN (7 Cols) -->
+        <div class="lg:col-span-7 space-y-4">
+
+          <!-- Calculated Stresses -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-amber-400"></i> Calculated Stresses
+              </h2>
+              <span class="text-[11px] text-slate-500 font-mono">calculate_cylinder_stresses()</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <!-- Hoop Stress -->
+              <div class="bg-slate-950/70 border border-blue-500/30 rounded-xl p-4 relative overflow-hidden">
+                <div class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Hoop Stress</div>
+                <div class="text-xs font-mono text-blue-400">&sigma;<sub>h</sub> = (p &times; d) / (2 &times; t)</div>
+                <div class="mt-2 text-3xl font-bold font-mono text-blue-400" id="val-hoop">25.000</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-1">N/mm²</div>
+              </div>
+
+              <!-- Longitudinal Stress -->
+              <div class="bg-slate-950/70 border border-red-500/30 rounded-xl p-4 relative overflow-hidden">
+                <div class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Longitudinal Stress</div>
+                <div class="text-xs font-mono text-red-400">&sigma;<sub>l</sub> = (p &times; d) / (4 &times; t)</div>
+                <div class="mt-2 text-3xl font-bold font-mono text-red-400" id="val-long">12.500</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-1">N/mm²</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calculated Dimension Changes -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+              <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <i class="fa-solid fa-arrows-up-down-left-right text-emerald-400"></i> Calculated Dimension Changes
+              </h2>
+              <span class="text-[11px] text-slate-500 font-mono">calculate_dimension_changes()</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <!-- Change in Diameter -->
+              <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5">
+                <div class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Change in Diameter</div>
+                <div class="text-[11px] font-mono text-cyan-400">&Delta;d</div>
+                <div class="mt-2 text-xl font-bold font-mono text-white" id="val-deltad">0.10625</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-1">mm</div>
+              </div>
+
+              <!-- Change in Length -->
+              <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5">
+                <div class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Change in Length</div>
+                <div class="text-[11px] font-mono text-purple-400">&Delta;l</div>
+                <div class="mt-2 text-xl font-bold font-mono text-white" id="val-deltal">0.07500</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-1">mm</div>
+              </div>
+
+              <!-- Change in Volume -->
+              <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5">
+                <div class="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Change in Volume</div>
+                <div class="text-[11px] font-mono text-emerald-400">&Delta;v</div>
+                <div class="mt-2 text-xl font-bold font-mono text-emerald-400" id="val-deltav">559,596.19</div>
+                <div class="text-[11px] text-slate-400 font-mono mt-1">mm³</div>
+              </div>
+            </div>
+
+            <!-- Volume note -->
+            <div class="mt-2 p-2.5 rounded-lg bg-slate-950/40 border border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400">
+              <span>Original Internal Volume (<span class="text-slate-300">v = &pi;/4 &times; d&sup2; &times; l</span>):</span>
+              <span id="val-orig-vol" class="text-slate-200 font-semibold">2,356,194,490.19 mm³</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ==================== THE SINGLE GRAPH (EXACT MATCH) ==================== -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+          <div>
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-blue-400"></i>
+              Stress vs Internal Pressure
+            </h2>
+            <p id="plot-subtitle" class="text-xs font-mono text-slate-400 mt-0.5">
+              (Diameter=1000.0mm, Thickness=10.0mm)
+            </p>
+          </div>
+          <div class="flex items-center gap-4 text-xs font-mono">
+            <span class="flex items-center gap-1.5 text-blue-400">
+              <span class="w-3.5 h-0.5 bg-blue-500 inline-block"></span> Hoop Stress (blue)
+            </span>
+            <span class="flex items-center gap-1.5 text-red-400">
+              <span class="w-3.5 h-0.5 border-t-2 border-dashed border-red-500 inline-block"></span> Longitudinal Stress (red dashed)
+            </span>
+          </div>
+        </div>
+
+        <!-- Single Graph Canvas -->
+        <div class="relative h-96 w-full bg-slate-950/50 rounded-xl p-3 border border-slate-800/60">
+          <canvas id="singleChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== VIEW 2: RUN EXACT PYTHON SCRIPT ==================== -->
+    <div id="view-python" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-brands fa-python text-yellow-400 text-xl"></i>
+              Execute code.md via Python Engine
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">
+              Executes your exact script and captures <code class="text-yellow-300 font-mono">stdout</code> and <code class="text-blue-300 font-mono">plt.show()</code> figure.
+            </p>
+          </div>
+          <button id="btn-run-py" onclick="runPythonCode()" class="px-5 py-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white shadow-lg shadow-blue-500/25 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-play"></i> Run Code Now
+          </button>
+        </div>
+
+        <!-- Terminal Output -->
+        <div class="rounded-xl border border-slate-800 bg-slate-950 overflow-hidden shadow-2xl">
+          <div class="bg-slate-900 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-green-500/80 inline-block"></span>
+              <span class="text-xs font-mono text-slate-400 ml-2">Terminal stdout</span>
+            </div>
+            <button onclick="clearTerminal()" class="text-[11px] text-slate-500 hover:text-slate-300">Clear</button>
+          </div>
+          <pre id="terminal-output" class="p-4 font-mono text-xs text-emerald-400 whitespace-pre-wrap max-h-96 overflow-y-auto leading-relaxed">
+Click "Run Code Now" above to execute your Python script with the current inputs.
+          </pre>
+        </div>
+
+        <!-- Matplotlib Render Container -->
+        <div id="matplotlib-container" class="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-3 hidden">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 class="text-xs font-bold text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-image text-blue-400"></i> Matplotlib Output (plt.show())
+            </h3>
+            <span class="text-[10px] font-mono text-slate-400">Rendered backend canvas</span>
+          </div>
+          <div id="matplotlib-target" class="flex justify-center overflow-x-auto py-2"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== VIEW 3: CODE VIEWER ==================== -->
+    <div id="view-code" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-file-code text-cyan-400"></i>
+              Original code.md (Unmodified &amp; Verbatim)
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">
+              Your exact code loaded directly from <code class="text-cyan-300 font-mono">code.md</code> without altering a single character.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="copyCode()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all flex items-center gap-1.5">
+              <i class="fa-regular fa-copy"></i> <span id="copy-btn-text">Copy Code</span>
+            </button>
+            <a href="code.md" download="thin_cylinder.py" class="px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-all flex items-center gap-1.5">
+              <i class="fa-solid fa-download"></i> Download .py
+            </a>
+          </div>
+        </div>
+
+        <div class="rounded-xl overflow-hidden border border-slate-800">
+          <pre class="line-numbers text-xs font-mono !bg-slate-950 !m-0"><code class="language-python" id="code-content">Loading code.md...</code></pre>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>Thin Cylinder Stress &amp; Dimension Calculator &bull; 100% Faithful to <span class="font-mono text-slate-400">code.md</span></div>
+      <div class="font-mono text-[11px]">&sigma;<sub>h</sub> = pd / 2t &bull; &sigma;<sub>l</sub> = pd / 4t</div>
+    </div>
+  </footer>
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <script>
+    // -------------------------------------------------------------
+    // EXACT RAW PYTHON CODE FROM code.md
+    // -------------------------------------------------------------
+    const RAW_PYTHON_CODE = `import numpy as np
+import matplotlib.pyplot as plt
+import math
+
+def calculate_cylinder_stresses(pressure, diameter, thickness):
+    """
+    Calculates hoop and longitudinal stresses for a thin-walled cylinder.
+    """
+    hoop_stress = (pressure * diameter) / (2 * thickness)
+    longitudinal_stress = (pressure * diameter) / (4 * thickness)
+    return hoop_stress, longitudinal_stress
+
+def calculate_dimension_changes(pressure, diameter, length, thickness, E, mu):
+    """
+    Calculates the change in diameter, length, and volume for a thin cylinder.
+    Formulas based on provided reference image.
+    """
+    # Change in Diameter (Delta d)
+    delta_d = (pressure * diameter**2) / (4 * thickness * E) * (2 - mu)
+    
+    # Change in Length (Delta l)
+    delta_l = (pressure * diameter * length) / (4 * thickness * E) * (1 - 2 * mu)
+    
+    # Original internal volume (v)
+    v = (math.pi / 4) * (diameter**2) * length
+    
+    # Change in Volume (Delta v)
+    delta_v = (pressure * diameter * v) / (4 * thickness * E) * (5 - 4 * mu)
+    
+    return delta_d, delta_l, delta_v
+
+print("--- Thin Cylinder Stress & Dimension Calculator ---")
+try:
+    # Take user input for geometric and loading conditions
+    diameter = float(input("Enter the internal diameter (in mm, e.g., 1000): "))
+    length = float(input("Enter the cylinder length (in mm, e.g., 3000): "))
+    base_thickness = float(input("Enter the wall thickness (in mm, e.g., 10): "))
+    base_pressure = float(input("Enter the internal pressure (in N/mm², e.g., 0.5): "))
+    
+    # Material properties
+    youngs_modulus = float(input("Enter Young's Modulus (E) (in N/mm², e.g., 200000 for steel): "))
+    poissons_ratio = float(input("Enter Poisson's ratio (μ) (e.g., 0.3): "))
+    
+    # Calculate stresses 
+    hoop_base, long_base = calculate_cylinder_stresses(base_pressure, diameter, base_thickness)
+    
+    # Calculate dimension changes
+    delta_d, delta_l, delta_v = calculate_dimension_changes(
+        base_pressure, diameter, length, base_thickness, youngs_modulus, poissons_ratio
+    )
+    
+    # Display the calculated values
+    print("\\n--- Calculated Stresses ---")
+    print(f"Hoop Stress:         {hoop_base:.3f} N/mm²")
+    print(f"Longitudinal Stress: {long_base:.3f} N/mm²")
+    
+    print("\\n--- Calculated Dimension Changes ---")
+    print(f"Change in Diameter (Δd): {delta_d:.5f} mm")
+    print(f"Change in Length (Δl):   {delta_l:.5f} mm")
+    print(f"Change in Volume (Δv):   {delta_v:.2f} mm³")
+    print("----------------------------------------------\\n")
+    
+    # Generate ranges based on user inputs to show variations (Stress only)
+    pressures = np.linspace(0, base_pressure * 2, 100)
+    hoop_stress_p, long_stress_p = calculate_cylinder_stresses(pressures, diameter, base_thickness)
+
+    thicknesses = np.linspace(base_thickness * 0.2, base_thickness * 2, 100)
+    hoop_stress_t, long_stress_t = calculate_cylinder_stresses(base_pressure, diameter, thicknesses)
+
+    # --- Plotting the Results ---
+
+    # Plot : Stresses vs Internal Pressure
+    plt.plot(pressures, hoop_stress_p, label='Hoop Stress', color='blue', linewidth=2)
+    plt.plot(pressures, long_stress_p, label='Longitudinal Stress', color='red', linestyle='--', linewidth=2)
+    plt.title(f'Stress vs Internal Pressure\\n(Diameter={diameter}mm, Thickness={base_thickness}mm)')
+    plt.xlabel('Internal Pressure (N/mm²)')
+    plt.ylabel('Stress (N/mm²)')
+    plt.grid(True, linestyle=':', alpha=0.7)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+except ValueError:
+    print("Invalid input detected. Please run the code again and enter numerical values only.")`;
+
+    // -------------------------------------------------------------
+    // EXACT REPLICATION OF PYTHON FUNCTIONS FROM code.md
+    // -------------------------------------------------------------
+    function calculate_cylinder_stresses(pressure, diameter, thickness) {
+      const hoop_stress = (pressure * diameter) / (2 * thickness);
+      const longitudinal_stress = (pressure * diameter) / (4 * thickness);
+      return { hoop_stress, longitudinal_stress };
+    }
+
+    function calculate_dimension_changes(pressure, diameter, length, thickness, E, mu) {
+      // Change in Diameter (Delta d)
+      const delta_d = (pressure * Math.pow(diameter, 2)) / (4 * thickness * E) * (2 - mu);
+      
+      // Change in Length (Delta l)
+      const delta_l = (pressure * diameter * length) / (4 * thickness * E) * (1 - 2 * mu);
+      
+      // Original internal volume (v)
+      const v = (Math.PI / 4) * Math.pow(diameter, 2) * length;
+      
+      // Change in Volume (Delta v)
+      const delta_v = (pressure * diameter * v) / (4 * thickness * E) * (5 - 4 * mu);
+      
+      return { delta_d, delta_l, delta_v, v };
+    }
+
+    function linspace(start, end, n) {
+      const arr = [];
+      const step = (end - start) / (n - 1);
+      for (let i = 0; i < n; i++) {
+        arr.push(start + step * i);
+      }
+      return arr;
+    }
+
+    let singleChart = null;
+
+    // Update Dashboard Logic
+    function updateDashboard() {
+      const diameter = parseFloat(document.getElementById('input-diameter').value);
+      const length = parseFloat(document.getElementById('input-length').value);
+      const base_thickness = parseFloat(document.getElementById('input-thickness').value);
+      const base_pressure = parseFloat(document.getElementById('input-pressure').value);
+      const youngs_modulus = parseFloat(document.getElementById('input-emodulus').value);
+      const poissons_ratio = parseFloat(document.getElementById('input-poisson').value);
+
+      const errBanner = document.getElementById('error-banner');
+
+      if (isNaN(diameter) || isNaN(length) || isNaN(base_thickness) || 
+          isNaN(base_pressure) || isNaN(youngs_modulus) || isNaN(poissons_ratio) ||
+          diameter <= 0 || length <= 0 || base_thickness <= 0 || base_pressure <= 0 || youngs_modulus <= 0) {
+        errBanner.classList.remove('hidden');
+        return;
+      }
+      errBanner.classList.add('hidden');
+
+      // Sync sliders
+      document.getElementById('slider-diameter').value = diameter;
+      document.getElementById('slider-length').value = length;
+      document.getElementById('slider-thickness').value = base_thickness;
+      document.getElementById('slider-pressure').value = base_pressure;
+      document.getElementById('slider-poisson').value = poissons_ratio;
+
+      // Calculate stresses
+      const { hoop_stress: hoop_base, longitudinal_stress: long_base } = 
+        calculate_cylinder_stresses(base_pressure, diameter, base_thickness);
+
+      // Calculate dimension changes
+      const { delta_d, delta_l, delta_v, v } = 
+        calculate_dimension_changes(base_pressure, diameter, length, base_thickness, youngs_modulus, poissons_ratio);
+
+      // Update UI matching code.md string formats:
+      // Hoop Stress: {hoop_base:.3f} N/mm²
+      // Longitudinal Stress: {long_base:.3f} N/mm²
+      document.getElementById('val-hoop').innerText = hoop_base.toFixed(3);
+      document.getElementById('val-long').innerText = long_base.toFixed(3);
+
+      // Change in Diameter (Δd): {delta_d:.5f} mm
+      // Change in Length (Δl):   {delta_l:.5f} mm
+      // Change in Volume (Δv):   {delta_v:.2f} mm³
+      document.getElementById('val-deltad').innerText = delta_d.toFixed(5);
+      document.getElementById('val-deltal').innerText = delta_l.toFixed(5);
+      document.getElementById('val-deltav').innerText = delta_v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('val-orig-vol').innerText = `${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} mm³`;
+
+      // Update plot subtitle
+      document.getElementById('plot-subtitle').innerText = `(Diameter=${diameter}mm, Thickness=${base_thickness}mm)`;
+
+      // Update the Single Graph
+      updateSinglePlot(base_pressure, diameter, base_thickness);
+    }
+
+    function updateSinglePlot(base_pressure, diameter, base_thickness) {
+      // pressures = np.linspace(0, base_pressure * 2, 100)
+      // hoop_stress_p, long_stress_p = calculate_cylinder_stresses(pressures, diameter, base_thickness)
+      const pressures = linspace(0, base_pressure * 2, 100);
+      const hoop_stress_p = pressures.map(p => (p * diameter) / (2 * base_thickness));
+      const long_stress_p = pressures.map(p => (p * diameter) / (4 * base_thickness));
+
+      if (singleChart) singleChart.destroy();
+
+      const ctx = document.getElementById('singleChart').getContext('2d');
+      singleChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: pressures.map(p => p.toFixed(3)),
+          datasets: [
+            {
+              label: 'Hoop Stress',
+              data: hoop_stress_p,
+              borderColor: 'blue',
+              backgroundColor: 'blue',
+              borderWidth: 2,
+              pointRadius: 0,
+              tension: 0
+            },
+            {
+              label: 'Longitudinal Stress',
+              data: long_stress_p,
+              borderColor: 'red',
+              backgroundColor: 'red',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              tension: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 250 },
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            title: {
+              display: true,
+              text: `Stress vs Internal Pressure\n(Diameter=${diameter}mm, Thickness=${base_thickness}mm)`,
+              color: '#f8fafc',
+              font: { family: 'Plus Jakarta Sans', size: 14, weight: 700 }
+            },
+            legend: {
+              position: 'top',
+              labels: {
+                color: '#cbd5e1',
+                font: { family: 'Plus Jakarta Sans', size: 12, weight: 600 },
+                boxWidth: 16
+              }
+            },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#f8fafc',
+              bodyColor: '#cbd5e1',
+              borderColor: '#334155',
+              borderWidth: 1,
+              padding: 10,
+              bodyFont: { family: 'JetBrains Mono', size: 12 },
+              titleFont: { family: 'JetBrains Mono', size: 12, weight: 700 }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Internal Pressure (N/mm²)',
+                color: '#94a3b8',
+                font: { family: 'Plus Jakarta Sans', size: 12, weight: 600 }
+              },
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 11 } },
+              grid: { color: 'rgba(51, 65, 85, 0.4)', borderDash: [2, 4] }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Stress (N/mm²)',
+                color: '#94a3b8',
+                font: { family: 'Plus Jakarta Sans', size: 12, weight: 600 }
+              },
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 11 } },
+              grid: { color: 'rgba(51, 65, 85, 0.4)', borderDash: [2, 4] },
+              min: 0
+            }
+          }
+        }
+      });
+    }
+
+    // Input-Slider Synchronization
+    function bindInput(idInput, idSlider) {
+      const input = document.getElementById(idInput);
+      const slider = document.getElementById(idSlider);
+
+      input.addEventListener('input', () => {
+        slider.value = input.value;
+        updateDashboard();
+      });
+      slider.addEventListener('input', () => {
+        input.value = slider.value;
+        updateDashboard();
+      });
+    }
+
+    bindInput('input-diameter', 'slider-diameter');
+    bindInput('input-length', 'slider-length');
+    bindInput('input-thickness', 'slider-thickness');
+    bindInput('input-pressure', 'slider-pressure');
+    bindInput('input-poisson', 'slider-poisson');
+
+    document.getElementById('input-emodulus').addEventListener('input', updateDashboard);
+
+    function resetDefaults() {
+      document.getElementById('input-diameter').value = 1000;
+      document.getElementById('slider-diameter').value = 1000;
+      document.getElementById('input-length').value = 3000;
+      document.getElementById('slider-length').value = 3000;
+      document.getElementById('input-thickness').value = 10;
+      document.getElementById('slider-thickness').value = 10;
+      document.getElementById('input-pressure').value = 0.5;
+      document.getElementById('slider-pressure').value = 0.5;
+      document.getElementById('input-emodulus').value = 200000;
+      document.getElementById('input-poisson').value = 0.3;
+      document.getElementById('slider-poisson').value = 0.3;
+      updateDashboard();
+    }
+
+    function switchTab(tabId) {
+      ['dashboard', 'python', 'code'].forEach(id => {
+        const btn = document.getElementById(`tab-${id}`);
+        const view = document.getElementById(`view-${id}`);
+        if (id === tabId) {
+          btn.className = "px-3.5 py-1.5 rounded-lg bg-blue-600 text-white shadow transition-all";
+          view.classList.remove('hidden');
+        } else {
+          btn.className = "px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/60 transition-all";
+          view.classList.add('hidden');
+        }
+      });
+    }
+
+    function copyCode() {
+      navigator.clipboard.writeText(RAW_PYTHON_CODE).then(() => {
+        const btnText = document.getElementById('copy-btn-text');
+        btnText.innerText = "Copied!";
+        setTimeout(() => { btnText.innerText = "Copy Code"; }, 2000);
+      });
+    }
+
+    function clearTerminal() {
+      document.getElementById('terminal-output').innerText = "";
+    }
+
+    // Run Python Script (Backend or Fallback)
+    async function runPythonCode() {
+      const terminal = document.getElementById('terminal-output');
+      const btn = document.getElementById('btn-run-py');
+      const diameter = parseFloat(document.getElementById('input-diameter').value);
+      const length = parseFloat(document.getElementById('input-length').value);
+      const base_thickness = parseFloat(document.getElementById('input-thickness').value);
+      const base_pressure = parseFloat(document.getElementById('input-pressure').value);
+      const youngs_modulus = parseFloat(document.getElementById('input-emodulus').value);
+      const poissons_ratio = parseFloat(document.getElementById('input-poisson').value);
+      const mplContainer = document.getElementById('matplotlib-container');
+      const mplTarget = document.getElementById('matplotlib-target');
+
+      terminal.innerText = `[INFO] Initializing Python execution for code.md...\n`;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Running...`;
+
+      // 1. Try local Flask backend first
+      let backendSuccess = false;
+      try {
+        const resp = await fetch('/api/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            diameter, length, base_thickness, base_pressure, youngs_modulus, poissons_ratio
+          })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          terminal.innerText += data.terminal_output;
+          backendSuccess = true;
+
+          // Also fetch exact Matplotlib figure
+          const plotResp = await fetch('/api/plot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ diameter, base_thickness, base_pressure })
+          });
+          if (plotResp.ok) {
+            const plotData = await plotResp.json();
+            if (plotData.image) {
+              mplTarget.innerHTML = `<img src="${plotData.image}" alt="Matplotlib Plot" class="rounded-lg shadow border border-slate-800 max-w-full h-auto">`;
+              mplContainer.classList.remove('hidden');
+            }
+          }
+        }
+      } catch (e) {
+        // Backend not reachable, fall through
+      }
+
+      if (!backendSuccess) {
+        // Client-side exact execution of the Python code's logic
+        const { hoop_stress: hoop_base, longitudinal_stress: long_base } = 
+          calculate_cylinder_stresses(base_pressure, diameter, base_thickness);
+        const { delta_d, delta_l, delta_v } = 
+          calculate_dimension_changes(base_pressure, diameter, length, base_thickness, youngs_modulus, poissons_ratio);
+
+        const out = 
+`--- Thin Cylinder Stress & Dimension Calculator ---
+Enter the internal diameter (in mm, e.g., 1000): ${diameter}
+Enter the cylinder length (in mm, e.g., 3000): ${length}
+Enter the wall thickness (in mm, e.g., 10): ${base_thickness}
+Enter the internal pressure (in N/mm², e.g., 0.5): ${base_pressure}
+Enter Young's Modulus (E) (in N/mm², e.g., 200000 for steel): ${youngs_modulus}
+Enter Poisson's ratio (μ) (e.g., 0.3): ${poissons_ratio}
+
+--- Calculated Stresses ---
+Hoop Stress:         ${hoop_base.toFixed(3)} N/mm²
+Longitudinal Stress: ${long_base.toFixed(3)} N/mm²
+
+--- Calculated Dimension Changes ---
+Change in Diameter (Δd): ${delta_d.toFixed(5)} mm
+Change in Length (Δl):   ${delta_l.toFixed(5)} mm
+Change in Volume (Δv):   ${delta_v.toFixed(2)} mm³
+----------------------------------------------
+`;
+        terminal.innerText = out;
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa-solid fa-play"></i> Run Code Now`;
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const codeElem = document.getElementById('code-content');
+      codeElem.textContent = RAW_PYTHON_CODE;
+      Prism.highlightElement(codeElem);
+
+      updateDashboard();
+    });
+  </script>
+</body>
+</html>
